@@ -1,0 +1,596 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>Vetka Production</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            -webkit-tap-highlight-color: transparent;
+        }
+        body {
+            background-color: #09090b;
+            color: #f4f4f5;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            min-height: 100vh;
+            padding: calc(30px + env(safe-area-inset-top)) 20px calc(40px + env(safe-area-inset-bottom));
+            overflow-x: hidden;
+            touch-action: pan-y;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+        input, textarea {
+            user-select: text !important;
+            -webkit-user-select: text !important;
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 24px;
+        }
+        .brand-title {
+            font-size: 26px;
+            font-weight: 700;
+            background: linear-gradient(135deg, #f472b6, #fb7185, #fda4af);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            letter-spacing: 0.5px;
+        }
+        .filters {
+            display: flex;
+            justify-content: center;
+            gap: 8px;
+            margin-bottom: 20px;
+        }
+        .filter-btn {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: #a1a1aa;
+            padding: 8px 14px;
+            border-radius: 20px;
+            font-size: 13px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        .filter-btn.active {
+            background: rgba(244, 114, 182, 0.18);
+            border-color: rgba(244, 114, 182, 0.5);
+            color: #f472b6;
+        }
+        .wish-list {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            margin-bottom: 90px;
+        }
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #71717a;
+        }
+        .empty-icon {
+            font-size: 32px;
+            margin-bottom: 10px;
+            display: block;
+        }
+        .wish-card {
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            padding: 16px;
+            border-radius: 16px;
+            display: flex;
+            align-items: flex-start;
+            gap: 14px;
+            cursor: pointer;
+            transition: opacity 0.2s ease, transform 0.15s ease;
+        }
+        .wish-card:active {
+            transform: scale(0.98);
+        }
+        .wish-card.completed {
+            opacity: 0.45;
+        }
+        .checkbox-container {
+            width: 24px;
+            height: 24px;
+            border: 2px solid rgba(255, 255, 255, 0.25);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            margin-top: 2px;
+            transition: all 0.2s ease;
+        }
+        .wish-card.completed .checkbox-container {
+            border-color: #34d399;
+            background: #34d399;
+        }
+        .checkbox-container svg {
+            width: 13px;
+            height: 13px;
+            fill: none;
+            stroke: #09090b;
+            stroke-width: 3;
+            display: none;
+        }
+        .wish-card.completed .checkbox-container svg {
+            display: block;
+        }
+        .wish-content {
+            flex-grow: 1;
+        }
+        .wish-text {
+            font-size: 15px;
+            line-height: 1.45;
+            color: #f4f4f5;
+            margin-bottom: 8px;
+            word-break: break-word;
+        }
+        .wish-card.completed .wish-text {
+            text-decoration: line-through;
+            color: #a1a1aa;
+        }
+        .wish-meta {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .badge {
+            font-size: 11px;
+            font-weight: 600;
+            padding: 3px 8px;
+            border-radius: 10px;
+            text-transform: uppercase;
+        }
+        .badge-category {
+            background: rgba(255, 255, 255, 0.08);
+            color: #d4d4d8;
+        }
+        .badge-capriz {
+            background: rgba(251, 113, 133, 0.15);
+            color: #fb7185;
+        }
+        .fab-btn {
+            position: fixed;
+            bottom: calc(24px + env(safe-area-inset-bottom));
+            right: 20px;
+            width: 56px;
+            height: 56px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #f472b6, #fb7185);
+            border: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 6px 20px rgba(251, 113, 133, 0.35);
+            color: white;
+            font-size: 26px;
+            z-index: 100;
+            cursor: pointer;
+        }
+        .sos-btn {
+            position: fixed;
+            bottom: calc(24px + env(safe-area-inset-bottom));
+            left: 20px;
+            width: 56px;
+            height: 56px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.06);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #fb7185;
+            font-size: 22px;
+            z-index: 100;
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            cursor: pointer;
+        }
+        .backdrop {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.65);
+            backdrop-filter: blur(6px);
+            -webkit-backdrop-filter: blur(6px);
+            opacity: 0;
+            pointer-events: none;
+            z-index: 200;
+            transition: opacity 0.25s ease;
+        }
+        .backdrop.active {
+            opacity: 1;
+            pointer-events: auto;
+        }
+        .sheet {
+            position: fixed;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            max-height: 85dvh;
+            overflow-y: auto;
+            -webkit-overflow-scrolling: touch;
+            background: #18181b;
+            border-top: 1px solid rgba(255, 255, 255, 0.12);
+            border-top-left-radius: 24px;
+            border-top-right-radius: 24px;
+            padding: 24px 20px calc(30px + env(safe-area-inset-bottom));
+            transform: translateY(100%);
+            transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+            z-index: 201;
+        }
+        .sheet.active {
+            transform: translateY(0);
+        }
+        .sheet-title {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 18px;
+            text-align: center;
+            color: #f4f4f5;
+        }
+        .form-group {
+            margin-bottom: 18px;
+        }
+        .form-label {
+            display: block;
+            font-size: 13px;
+            font-weight: 500;
+            color: #a1a1aa;
+            margin-bottom: 8px;
+        }
+        .textarea {
+            width: 100%;
+            height: 90px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            border-radius: 12px;
+            padding: 12px;
+            color: white;
+            font-family: inherit;
+            font-size: 16px;
+            resize: none;
+            outline: none;
+        }
+        .radio-group {
+            display: flex;
+            gap: 8px;
+        }
+        .radio-btn {
+            flex: 1;
+            text-align: center;
+            padding: 10px;
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            font-size: 13px;
+            font-weight: 500;
+            color: #a1a1aa;
+            cursor: pointer;
+        }
+        .radio-btn.active {
+            background: rgba(251, 113, 133, 0.15);
+            border-color: rgba(251, 113, 133, 0.4);
+            color: #fb7185;
+        }
+        .range-slider {
+            width: 100%;
+            -webkit-appearance: none;
+            appearance: none;
+            background: rgba(255, 255, 255, 0.12);
+            height: 6px;
+            border-radius: 3px;
+            outline: none;
+        }
+        .range-slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 22px;
+            height: 22px;
+            border-radius: 50%;
+            background: #fb7185;
+            cursor: pointer;
+        }
+        .range-val {
+            text-align: right;
+            font-size: 12px;
+            color: #fb7185;
+            font-weight: 600;
+            margin-top: 6px;
+        }
+        .submit-btn {
+            width: 100%;
+            padding: 14px;
+            background: linear-gradient(to right, #f472b6, #fb7185);
+            border: none;
+            border-radius: 14px;
+            color: white;
+            font-size: 15px;
+            font-weight: 600;
+            margin-top: 8px;
+            cursor: pointer;
+        }
+        .popup {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) scale(0.92);
+            width: 85%;
+            max-width: 320px;
+            background: #18181b;
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            border-radius: 20px;
+            padding: 24px;
+            text-align: center;
+            z-index: 300;
+            opacity: 0;
+            pointer-events: none;
+            transition: all 0.2s ease;
+        }
+        .popup.active {
+            transform: translate(-50%, -50%) scale(1);
+            opacity: 1;
+            pointer-events: auto;
+        }
+        .popup-icon {
+            font-size: 36px;
+            margin-bottom: 12px;
+            display: block;
+        }
+        .popup-title {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+        .popup-text {
+            font-size: 14px;
+            color: #a1a1aa;
+            line-height: 1.5;
+            margin-bottom: 18px;
+        }
+        .popup-btn {
+            padding: 10px 24px;
+            background: rgba(255, 255, 255, 0.08);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            color: white;
+            border-radius: 12px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <h1 class="brand-title">Vetka Production</h1>
+    </div>
+
+    <div class="filters">
+        <button type="button" class="filter-btn active" onclick="filterWishes('Все')">Все</button>
+        <button type="button" class="filter-btn" onclick="filterWishes('Хотелки')">Хотелки</button>
+        <button type="button" class="filter-btn" onclick="filterWishes('Вкусняшки')">Вкусняшки</button>
+        <button type="button" class="filter-btn" onclick="filterWishes('Безумие')">Безумие</button>
+    </div>
+
+    <div class="wish-list" id="wishContainer"></div>
+
+    <button type="button" class="sos-btn" onclick="openSOS()">🔥</button>
+    <button type="button" class="fab-btn" onclick="openSheet()">+</button>
+
+    <div class="backdrop" id="backdrop" onclick="closeAll()"></div>
+
+    <!-- ФОРМА ДОБАВЛЕНИЯ -->
+    <div class="sheet" id="wishSheet">
+        <h3 class="sheet-title">Новый каприз</h3>
+        <div class="form-group">
+            <span class="form-label">Что хочется?</span>
+            <textarea class="textarea" id="wishText" placeholder="Напиши желание..."></textarea>
+        </div>
+        <div class="form-group">
+            <span class="form-label">Категория</span>
+            <div class="radio-group">
+                <button type="button" class="radio-btn active" onclick="selectCategory('Хотелки', this)">Хотелки</button>
+                <button type="button" class="radio-btn" onclick="selectCategory('Вкусняшки', this)">Вкусняшки</button>
+                <button type="button" class="radio-btn" onclick="selectCategory('Безумие', this)">Безумие</button>
+            </div>
+        </div>
+        <div class="form-group">
+            <span class="form-label">Уровень капризности</span>
+            <input type="range" class="range-slider" min="1" max="10" value="5" id="wishCapriz" oninput="updateRangeVal(this.value)">
+            <div class="range-val" id="rangeVal">5 / 10</div>
+        </div>
+        <button type="button" class="submit-btn" onclick="submitWish()">Отправить</button>
+    </div>
+
+    <!-- ПОПАП SOS -->
+    <div class="popup" id="sosPopup">
+        <span class="popup-icon">🚨</span>
+        <h4 class="popup-title">Сигнал отправлен</h4>
+        <p class="popup-text">Твоему мастеру заботы улетело экстренное уведомление. Скоро всё исправим! ✨</p>
+        <button type="button" class="popup-btn" onclick="closeAll()">Хорошо</button>
+    </div>
+
+    <script>
+        const BOT_TOKEN = "9139608188:AAHBufh94yZVok3R3ai1Fbreic2bdeOSp6E";
+        const CHAT_ID = "6298025871";
+
+        let wishes = [];
+        let currentCategory = 'Хотелки';
+        let activeFilter = 'Все';
+
+        window.addEventListener('DOMContentLoaded', () => {
+            try {
+                const saved = localStorage.getItem('vetka_wishes');
+                if (saved) wishes = JSON.parse(saved);
+            } catch(e) { console.error(e); }
+            renderWishes();
+        });
+
+        function haptic() {
+            if (window.Telegram && window.Telegram.WebApp && window.Telegram.WebApp.HapticFeedback) {
+                window.Telegram.WebApp.HapticFeedback.impactOccurred('light');
+            } else if (navigator.vibrate) {
+                try { navigator.vibrate(15); } catch(e) {}
+            }
+        }
+
+        async function tgSend(msg) {
+            try {
+                await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ chat_id: CHAT_ID, text: msg })
+                });
+            } catch(e) { console.error('TG send error:', e); }
+        }
+
+        function renderWishes() {
+            const container = document.getElementById('wishContainer');
+            if (!container) return;
+            container.innerHTML = '';
+            
+            const filtered = wishes.filter(w => activeFilter === 'Все' || w.category === activeFilter);
+
+            if (filtered.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <span class="empty-icon">✨</span>
+                        <p>Пустовато</p>
+                    </div>
+                `;
+                return;
+            }
+
+            filtered.forEach(w => {
+                const card = document.createElement('div');
+                card.className = `wish-card ${w.completed ? 'completed' : ''}`;
+                card.onclick = () => toggleComplete(w.id);
+
+                card.innerHTML = `
+                    <div class="checkbox-container">
+                        <svg viewBox="0 0 24 24"><path d="M5 13l4 4L19 7"/></svg>
+                    </div>
+                    <div class="wish-content">
+                        <p class="wish-text"></p>
+                        <div class="wish-meta">
+                            <span class="badge badge-category"></span>
+                            <span class="badge badge-capriz"></span>
+                        </div>
+                    </div>
+                `;
+                card.querySelector('.wish-text').textContent = w.text;
+                card.querySelector('.badge-category').textContent = w.category;
+                card.querySelector('.badge-capriz').textContent = 'Каприз: ' + w.capriz + '/10';
+
+                container.appendChild(card);
+            });
+        }
+
+        function filterWishes(cat) {
+            haptic();
+            activeFilter = cat;
+            document.querySelectorAll('.filter-btn').forEach(btn => {
+                btn.classList.toggle('active', btn.innerText === cat);
+            });
+            renderWishes();
+        }
+
+        function openSheet() {
+            haptic();
+            document.getElementById('backdrop').classList.add('active');
+            document.getElementById('wishSheet').classList.add('active');
+        }
+
+        function closeAll() {
+            document.getElementById('backdrop').classList.remove('active');
+            document.getElementById('wishSheet').classList.remove('active');
+            document.getElementById('sosPopup').classList.remove('active');
+        }
+
+        function selectCategory(cat, btn) {
+            haptic();
+            currentCategory = cat;
+            document.querySelectorAll('.radio-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+        }
+
+        function updateRangeVal(val) {
+            document.getElementById('rangeVal').innerText = val + ' / 10';
+        }
+
+        function submitWish() {
+            const textEl = document.getElementById('wishText');
+            const text = textEl.value.trim();
+            const capriz = document.getElementById('wishCapriz').value;
+
+            if (!text) return;
+
+            const newWish = {
+                id: Date.now(),
+                text: text,
+                category: currentCategory,
+                capriz: capriz,
+                completed: false
+            };
+
+            wishes.unshift(newWish);
+            try {
+                localStorage.setItem('vetka_wishes', JSON.stringify(wishes));
+            } catch(e) {}
+            
+            haptic();
+            renderWishes();
+            closeAll();
+
+            textEl.value = '';
+            document.getElementById('wishCapriz').value = 5;
+            document.getElementById('rangeVal').innerText = '5 / 10';
+
+            const msg = `🌟 Новый каприз в Vetka Production!
+
+Раздел: ${newWish.category}
+Капризность: ${newWish.capriz}/10
+Желание: ${newWish.text}`;
+            tgSend(msg);
+        }
+
+        function toggleComplete(id) {
+            haptic();
+            const wish = wishes.find(w => w.id === id);
+            if (wish) {
+                wish.completed = !wish.completed;
+                try {
+                    localStorage.setItem('vetka_wishes', JSON.stringify(wishes));
+                } catch(e) {}
+                renderWishes();
+
+                if (wish.completed) {
+                    const msg = `✅ Каприз исполнен!
+
+Раздел: ${wish.category}
+Текст: ${wish.text}`;
+                    tgSend(msg);
+                }
+            }
+        }
+
+        function openSOS() {
+            haptic();
+            document.getElementById('backdrop').classList.add('active');
+            document.getElementById('sosPopup').classList.add('active');
+
+            const msg = `🚨 ВНИМАНИЕ! Экстренный вызов!
+
+Она нажала кнопку «Внимание». Срочно требуется забота и тепло! ✨`;
+            tgSend(msg);
+        }
+    </script>
+</body>
+</html>
